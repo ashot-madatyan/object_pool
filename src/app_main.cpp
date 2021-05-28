@@ -72,6 +72,11 @@ void test_object_pool()
         //printf("got object: %d %s\n", ptr->val, ptr->str.c_str());
         vvv.push_back(move(ptr));
     }
+    
+    ptr_type ptr = std::move(vvv[vvv.size() - 1]);
+    vvv.pop_back();
+    gm.remove(ptr);
+
 
     for (int i = 0; i < 4; ++i)
         vvv.pop_back();

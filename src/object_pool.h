@@ -16,7 +16,7 @@ class object_pool
     // Wrapper for the actual data stored in the object pool
     struct pool_element
     {
-        int healty = 1;
+        int healthy{1};
         T* entry;
 
         pool_element() : entry(nullptr) {}
@@ -71,18 +71,49 @@ public:
         }
     }
 
+    void remove(uptr_type& ptobject)
+    {
+        if (!ptobject)
+            return;
+
+        storage_type::iterator it;
+        {
+            lock_guard<mutex> lck(mtx_);
+            it = used_items_.find(ptobject.get());
+            // Silently ignore this call on non existing entry
+            if (it == used_items_.end())
+                return;
+        }
+
+        pool_element* pel = it->second;
+        pel->healthy = 0;
+
+        //Just reset the pointer, the memory deallocation and the cleanup will be done in the deleter
+        ptobject.reset();
+    }
+
     void reclaim_object(T* pobject)
     {
         if (nullptr != pobject)
         {
             lock_guard<mutex> lck(mtx_);
-            //pobject->print();
+            pobject->print();
+
             storage_type::iterator it = used_items_.find(pobject);
             if (it == used_items_.end())
                 throw std::runtime_error("object not in the used items store");
+            
             pool_element* pel = it->second;
-            used_items_.erase(it);
-            free_items_[pobject] = pel;
+            if (0 == pel->healthy)
+            {
+                used_items_.erase(it);
+                delete pel;
+            }
+            else // Reuse this object by adding to the 'free' objects store
+            {
+                used_items_.erase(it);
+                free_items_[pobject] = pel;
+            }
         }
         else
         {
