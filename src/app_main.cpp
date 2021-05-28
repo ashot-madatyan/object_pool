@@ -73,19 +73,44 @@ void test_object_pool()
         vvv.push_back(move(ptr));
     }
     
+    // Test the remove functional
     ptr_type ptr = std::move(vvv[vvv.size() - 1]);
     vvv.pop_back();
     gm.remove(ptr);
-
-
+    
     for (int i = 0; i < 4; ++i)
         vvv.pop_back();
 
 }
 
+void test_object_pool_init_list()
+{
+    object_pool<test_struct> gm{ 
+                                test_struct{1, "one"}, 
+                                test_struct{2, "two"}, 
+                                test_struct{3, "three"} 
+                                };
+
+    vector<std::unique_ptr<test_struct, object_pool<test_struct>::deleter_type>> vvv;
+    using ptr_type = std::unique_ptr<test_struct, object_pool<test_struct>::deleter_type>;
+    
+    int sz = (int)gm.size();
+
+    for (int i = 0; i < sz; ++i)
+    {
+        ptr_type ptr = gm.get();
+        vvv.push_back(move(ptr));
+    }
+
+    for (int i = 0; i < (int)vvv.size(); ++i)
+        vvv[i]->print();
+}
+
+
 int main()
 {
-    test_object_pool();
+    //test_object_pool();
+    test_object_pool_init_list();
     return 0;
     
     object_pool<dflt_ctbl> op;

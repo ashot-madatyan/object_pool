@@ -59,6 +59,22 @@ public:
         }
     }
 
+    object_pool(initializer_list<T> init) : object_deleter(this)
+    {
+        for (initializer_list<T>::iterator it = init.begin(); it != init.end(); ++it)
+        {
+            T* obj = new T(*it);
+            pool_element* pel = new pool_element;
+            pel->entry = obj;
+            free_items_[obj] = pel;
+        }
+    }
+
+    object_pool(const object_pool& other) = delete;
+    object_pool(object_pool&& other) = delete;
+    object_pool& operator = (const object_pool& other) = delete;
+    object_pool& operator = (object_pool&& other) = delete;
+    
     template<class ...Args>
     void add(Args&& ...args)
     {
@@ -97,7 +113,7 @@ public:
         if (nullptr != pobject)
         {
             lock_guard<mutex> lck(mtx_);
-            pobject->print();
+            //pobject->print();
 
             storage_type::iterator it = used_items_.find(pobject);
             if (it == used_items_.end())
@@ -121,17 +137,19 @@ public:
         }
     }
 
-    size_t size() const
+    size_t size()
     {
         lock_guard<mutex> lck(mtx_);
-        return used_items_.size();
+        return free_items_.size();
     }
 
-    size_t capacity() const
+    /*
+    size_t capacity()
     {
         lock_guard<mutex> lck(mtx_);
         return used_items_.size() + free_items_.size();
     }
+    */
 
     uptr_type get()
     {
