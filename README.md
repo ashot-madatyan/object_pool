@@ -1,8 +1,8 @@
-## Description
+# Description
 Create a small C/C++ library that implements a generic object pool.
 This is a small, header only library that implements the functionality of generic object pool.
 
-# API's
+## API's
 The functionality of the library is exposed through its public API listed below
 1. CTORs - default and initialization list
 2. Add - adds an object to the pool, given its arguments (similar to CTOR)
